@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, Integer, String, Text, ForeignKey, func
-from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from sqlalchemy import JSON, DateTime, Float, Integer, String, Text, ForeignKey, func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.base import Base
@@ -21,7 +21,7 @@ class Customer(Base):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     city: Mapped[str | None] = mapped_column(String(255), nullable=True)
     country: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    tags: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True, default=list)
+    tags: Mapped[list[str] | None] = mapped_column(JSON, nullable=True, default=list)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     source: Mapped[str | None] = mapped_column(String(100), nullable=True)
     total_events_attended: Mapped[int] = mapped_column(Integer, default=0)

@@ -97,7 +97,10 @@ async def refresh_tokens(db: AsyncSession, refresh_token: str) -> tuple[User, st
         )
     )
     rt = result.scalar_one_or_none()
-    if not rt or rt.expires_at < datetime.now(timezone.utc):
+    expires_at = rt.expires_at if rt else None
+    if expires_at and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if not rt or expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
     rt.revoked = True

@@ -60,7 +60,7 @@ async def list_customers(
             )
         )
     if tag:
-        query = query.where(Customer.tags.any(tag))
+        query = query.where(Customer.tags.contains([tag]))
     query = query.order_by(Customer.created_at.desc()).limit(limit).offset(offset)
 
     result = await db.execute(query)
