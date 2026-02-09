@@ -1,0 +1,39 @@
+{
+  "family": "ticketing-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/ticketing-backend:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "CORS_ORIGINS", "value": "[\"https://app.example.com\",\"https://www.example.com\"]" }
+      ],
+      "secrets": [
+        { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:ticketing/database-url" },
+        { "name": "REDIS_URL", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:ticketing/redis-url" },
+        { "name": "SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:ticketing/secret-key" },
+        { "name": "ENCRYPTION_KEY", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:ticketing/encryption-key" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ticketing-backend",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "backend"
+        }
+      },
+      "essential": true
+    }
+  ]
+}

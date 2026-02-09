@@ -1,0 +1,14 @@
+node_modules/
+.next/
+dist/
+__pycache__/
+*.pyc
+.env
+.env.local
+*.egg-info/
+.venv/
+venv/
+test.db
+*.db
+.turbo/
+.DS_Store
