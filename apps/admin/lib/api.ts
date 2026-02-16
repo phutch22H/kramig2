@@ -54,7 +54,15 @@ async function apiRequest<T>(path: string, options: RequestOptions = {}): Promis
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(err.detail || `Request failed with status ${res.status}`);
+    let message: string;
+    if (typeof err.detail === "string") {
+      message = err.detail;
+    } else if (Array.isArray(err.detail)) {
+      message = err.detail.map((e: any) => e.msg || JSON.stringify(e)).join("; ");
+    } else {
+      message = `Request failed with status ${res.status}`;
+    }
+    throw new Error(message);
   }
 
   const contentType = res.headers.get("content-type");
@@ -72,6 +80,8 @@ export const api = {
   // Organizations
   listOrgs: () => apiRequest<any[]>("/api/v1/orgs"),
   getOrg: (orgId: string) => apiRequest<any>(`/api/v1/orgs/${orgId}`),
+  createOrg: (data: { name: string; type: string; description?: string; logo_url?: string }) =>
+    apiRequest<any>("/api/v1/orgs", { method: "POST", body: data }),
 
   // Events
   listEvents: (params?: { status?: string; limit?: number; offset?: number }) => {
