@@ -48,7 +48,14 @@ export async function fetchEvents(
       return { items: [], total: 0, page: 1, page_size: 20, total_pages: 0 };
     }
 
-    return res.json();
+    const json = await res.json();
+    return {
+      items: json.items || [],
+      total: json.total || 0,
+      page: json.page || 1,
+      page_size: json.page_size || 20,
+      total_pages: json.total_pages || 0,
+    };
   } catch (error) {
     console.error("Error fetching events:", error);
     return { items: [], total: 0, page: 1, page_size: 20, total_pages: 0 };

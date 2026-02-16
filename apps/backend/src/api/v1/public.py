@@ -17,23 +17,34 @@ async def browse_events(
     db: AsyncSession = Depends(get_db),
     search: str | None = Query(None),
     city: str | None = Query(None),
-    limit: int = Query(20, le=100),
-    offset: int = Query(0),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, le=100),
 ):
-    query = select(Event, Organization).join(Organization, Event.org_id == Organization.id).where(
+    from sqlalchemy import func as sa_func
+
+    base_query = select(Event, Organization).join(Organization, Event.org_id == Organization.id).where(
         Event.is_public == True,
         Event.status == "published",
     )
     if search:
-        query = query.where(Event.name.ilike(f"%{search}%"))
+        base_query = base_query.where(Event.name.ilike(f"%{search}%"))
     if city:
-        query = query.where(Event.venue_address.ilike(f"%{city}%"))
-    query = query.order_by(Event.event_date.asc().nullslast()).limit(limit).offset(offset)
+        base_query = base_query.where(Event.venue_address.ilike(f"%{city}%"))
+
+    count_result = await db.execute(
+        select(sa_func.count()).select_from(
+            base_query.with_only_columns(Event.id).subquery()
+        )
+    )
+    total = count_result.scalar() or 0
+
+    offset = (page - 1) * page_size
+    query = base_query.order_by(Event.event_date.asc().nullslast()).limit(page_size).offset(offset)
 
     result = await db.execute(query)
-    events = []
+    items = []
     for event, org in result.all():
-        events.append({
+        items.append({
             "id": str(event.id),
             "name": event.name,
             "description": event.description,
@@ -43,7 +54,9 @@ async def browse_events(
             "image_url": event.image_url,
             "organizer": org.name,
         })
-    return {"events": events, "count": len(events)}
+
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+    return {"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": total_pages}
 
 
 @router.get("/events/{event_id}")
