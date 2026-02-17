@@ -121,7 +121,7 @@ export default function ConnectorsPage() {
               )}
             </div>
 
-            {isConnecting && (
+            {isConnecting && connectForm && (
               <form onSubmit={handleConnect} style={{ marginTop: "1rem", padding: "1rem", background: "#f9fafb", borderRadius: "6px" }}>
                 <div style={{ marginBottom: "0.75rem" }}>
                   <label style={{ fontSize: "0.8rem", fontWeight: 500, display: "block", marginBottom: "0.25rem" }}>API Key</label>
