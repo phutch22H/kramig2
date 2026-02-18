@@ -50,7 +50,16 @@ export async function fetchEvents(
 
     const json = await res.json();
     return {
-      items: json.items || [],
+      items: (json.items || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        date: item.event_date,
+        venue: item.venue_name,
+        city: item.venue_address,
+        image_url: item.image_url,
+        organizer: item.organizer,
+      })),
       total: json.total || 0,
       page: json.page || 1,
       page_size: json.page_size || 20,
@@ -75,7 +84,19 @@ export async function fetchEventDetail(id: string): Promise<Event | null> {
       return null;
     }
 
-    return res.json();
+    const data = await res.json();
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      date: data.event_date,
+      venue: data.venue_name,
+      city: data.venue_address,
+      image_url: data.image_url,
+      organizer: data.organizer,
+      artists: (data.artists || []).map((a: any) => a.name),
+      buy_links: (data.buy_links || []).map((l: any) => ({ label: l.seller, url: l.url })),
+    };
   } catch (error) {
     console.error(`Error fetching event ${id}:`, error);
     return null;
