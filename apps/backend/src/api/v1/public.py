@@ -60,6 +60,50 @@ async def artist_detail(slug: str, db: AsyncSession = Depends(get_db)):
     }
 
 
+@router.get("/artists/{slug}/similar")
+async def similar_artists(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+    limit: int = Query(12, ge=1, le=50),
+):
+    result = await db.execute(select(Artist).where(Artist.slug == slug))
+    artist = result.scalar_one_or_none()
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artist not found")
+
+    if not artist.genre:
+        return {
+            "artist": {"id": str(artist.id), "name": artist.name, "slug": artist.slug, "genre": artist.genre, "image_url": artist.image_url},
+            "similar": [],
+        }
+
+    from src.services.genre_affinity import get_related_genres
+    related = get_related_genres(artist.genre, min_affinity=0.3)
+
+    candidates_result = await db.execute(
+        select(Artist)
+        .where(Artist.genre.in_(list(related.keys())))
+        .where(Artist.id != artist.id)
+    )
+    candidates = candidates_result.scalars().all()
+
+    scored = []
+    for c in candidates:
+        affinity = related.get(c.genre, 0.0)
+        scored.append({
+            "id": str(c.id), "name": c.name, "slug": c.slug,
+            "image_url": c.image_url, "genre": c.genre,
+            "affinity_score": round(affinity, 2),
+        })
+
+    scored.sort(key=lambda x: (-x["affinity_score"], x["name"]))
+
+    return {
+        "artist": {"id": str(artist.id), "name": artist.name, "slug": artist.slug, "genre": artist.genre, "image_url": artist.image_url},
+        "similar": scored[:limit],
+    }
+
+
 @router.get("/events")
 async def browse_events(
     db: AsyncSession = Depends(get_db),

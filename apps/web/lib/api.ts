@@ -162,6 +162,27 @@ export async function fetchArtistDetail(slug: string): Promise<Artist | null> {
   }
 }
 
+export interface SimilarArtist extends Artist {
+  affinity_score: number;
+}
+
+export interface SimilarArtistsResponse {
+  artist: Artist;
+  similar: SimilarArtist[];
+}
+
+export async function fetchSimilarArtists(slug: string): Promise<SimilarArtistsResponse | null> {
+  const url = `${API_URL}/api/v1/public/artists/${slug}/similar`;
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error(`Error fetching similar artists for ${slug}:`, error);
+    return null;
+  }
+}
+
 export async function fetchAllEvents(): Promise<Event[]> {
   const allEvents: Event[] = [];
   let page = 1;

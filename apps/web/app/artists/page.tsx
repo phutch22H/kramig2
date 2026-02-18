@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchArtists, Artist } from "@/lib/api";
+import { fetchArtists, fetchSimilarArtists, Artist, SimilarArtist } from "@/lib/api";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -13,6 +13,10 @@ export default function ArtistsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
+
+  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [similarArtists, setSimilarArtists] = useState<SimilarArtist[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
 
   useEffect(() => {
     loadArtists();
@@ -47,11 +51,25 @@ export default function ArtistsPage() {
     setPage(1);
   }
 
+  async function handleArtistClick(artist: Artist) {
+    if (selectedArtist?.slug === artist.slug) {
+      setSelectedArtist(null);
+      setSimilarArtists([]);
+      return;
+    }
+    setSelectedArtist(artist);
+    setLoadingSimilar(true);
+    setSimilarArtists([]);
+    const data = await fetchSimilarArtists(artist.slug);
+    setSimilarArtists(data?.similar || []);
+    setLoadingSimilar(false);
+  }
+
   return (
     <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 48px" }}>
       <div style={{ padding: "48px 0 24px" }}>
         <h1 style={{ fontSize: "2.5rem", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "8px" }}>Artists</h1>
-        <p style={{ color: "#888", fontSize: "1rem" }}>Browse {total > 0 ? `${total} ` : ""}artists in our directory</p>
+        <p style={{ color: "#888", fontSize: "1rem" }}>Browse {total > 0 ? `${total} ` : ""}artists — click any artist to discover similar ones</p>
       </div>
 
       <form onSubmit={handleSearch} style={{ marginBottom: "24px" }}>
@@ -59,7 +77,7 @@ export default function ArtistsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search artists..."
+            placeholder="Search for an artist you like..."
             style={{
               flex: 1, padding: "12px 20px", border: "1px solid #222", borderRadius: "20px",
               fontSize: "0.9rem", background: "#111", color: "#fff", outline: "none", fontFamily: "var(--font-sans)",
@@ -99,6 +117,97 @@ export default function ArtistsPage() {
         )}
       </div>
 
+      {selectedArtist && (
+        <div style={{
+          marginBottom: "32px", padding: "24px", background: "#0a0a0a",
+          borderRadius: "8px", border: "1px solid #222",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <div>
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "4px" }}>
+                Artists like <span style={{ color: "#4BFA94" }}>{selectedArtist.name}</span>
+              </h2>
+              {selectedArtist.genre && (
+                <p style={{ color: "#888", fontSize: "0.85rem" }}>
+                  Based on genre affinity with {selectedArtist.genre}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => { setSelectedArtist(null); setSimilarArtists([]); }}
+              style={{
+                background: "transparent", border: "1px solid #333", borderRadius: "20px",
+                padding: "8px 16px", color: "#888", cursor: "pointer", fontSize: "0.8rem",
+              }}>
+              Dismiss
+            </button>
+          </div>
+
+          {loadingSimilar ? (
+            <div style={{ textAlign: "center", padding: "32px", color: "#888" }}>
+              Finding similar artists...
+            </div>
+          ) : similarArtists.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "32px", color: "#888" }}>
+              No similar artists found
+            </div>
+          ) : (
+            <div style={{
+              display: "flex", gap: "12px", overflowX: "auto",
+              paddingBottom: "8px", scrollSnapType: "x mandatory",
+            }}>
+              {similarArtists.map((sa) => (
+                <div
+                  key={sa.id}
+                  onClick={() => handleArtistClick(sa)}
+                  style={{
+                    minWidth: "160px", maxWidth: "160px",
+                    background: "#111", borderRadius: "5px", padding: "16px 14px",
+                    cursor: "pointer", scrollSnapAlign: "start",
+                    border: "1px solid #222",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#4BFA94")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#222")}
+                >
+                  <h4 style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", marginBottom: "6px" }}>
+                    {sa.name}
+                  </h4>
+                  {sa.genre && (
+                    <span style={{
+                      display: "inline-block", padding: "2px 8px",
+                      background: "rgba(75, 250, 148, 0.12)", color: "#4BFA94",
+                      borderRadius: "9999px", fontSize: "0.7rem", fontWeight: 600,
+                      marginBottom: "8px",
+                    }}>
+                      {sa.genre}
+                    </span>
+                  )}
+                  <div style={{ marginTop: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
+                      <span style={{ fontSize: "0.65rem", color: "#555" }}>Match</span>
+                      <span style={{ fontSize: "0.65rem", color: "#4BFA94" }}>{Math.round(sa.affinity_score * 100)}%</span>
+                    </div>
+                    <div style={{
+                      height: "3px", background: "#222", borderRadius: "2px",
+                      overflow: "hidden",
+                    }}>
+                      <div style={{
+                        width: `${sa.affinity_score * 100}%`,
+                        height: "100%",
+                        background: `rgba(75, 250, 148, ${0.4 + sa.affinity_score * 0.6})`,
+                        borderRadius: "2px",
+                        transition: "width 0.3s ease",
+                      }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div style={{ textAlign: "center", padding: "64px", color: "#888" }}>Loading...</div>
       ) : artists.length === 0 ? (
@@ -109,9 +218,10 @@ export default function ArtistsPage() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
           {artists.map((artist) => (
-            <div key={artist.id} style={{
+            <div key={artist.id} onClick={() => handleArtistClick(artist)} style={{
               background: "#111", borderRadius: "5px", padding: "20px 16px",
-              transition: "background 0.2s ease", cursor: "default",
+              transition: "all 0.2s ease", cursor: "pointer",
+              border: selectedArtist?.slug === artist.slug ? "1px solid #4BFA94" : "1px solid transparent",
             }}>
               <h3 style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: "6px", color: "#fff" }}>{artist.name}</h3>
               {artist.genre && (
