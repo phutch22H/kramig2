@@ -103,6 +103,65 @@ export async function fetchEventDetail(id: string): Promise<Event | null> {
   }
 }
 
+export interface Artist {
+  id: string;
+  name: string;
+  slug: string;
+  image_url?: string;
+  genre?: string;
+}
+
+export interface ArtistsResponse {
+  items: Artist[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export async function fetchArtists(
+  params: {
+    search?: string;
+    letter?: string;
+    genre?: string;
+    page?: number;
+    page_size?: number;
+  } = {}
+): Promise<ArtistsResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.search) searchParams.set("search", params.search);
+  if (params.letter) searchParams.set("letter", params.letter);
+  if (params.genre) searchParams.set("genre", params.genre);
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.page_size) searchParams.set("page_size", String(params.page_size));
+
+  const qs = searchParams.toString();
+  const url = `${API_URL}/api/v1/public/artists${qs ? `?${qs}` : ""}`;
+
+  try {
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) {
+      return { items: [], total: 0, page: 1, page_size: 50, total_pages: 0 };
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching artists:", error);
+    return { items: [], total: 0, page: 1, page_size: 50, total_pages: 0 };
+  }
+}
+
+export async function fetchArtistDetail(slug: string): Promise<Artist | null> {
+  const url = `${API_URL}/api/v1/public/artists/${slug}`;
+  try {
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error(`Error fetching artist ${slug}:`, error);
+    return null;
+  }
+}
+
 export async function fetchAllEvents(): Promise<Event[]> {
   const allEvents: Event[] = [];
   let page = 1;

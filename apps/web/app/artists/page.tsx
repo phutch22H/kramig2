@@ -1,0 +1,151 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { fetchArtists, Artist } from "@/lib/api";
+
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+export default function ArtistsPage() {
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [activeLetter, setActiveLetter] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    loadArtists();
+  }, [page, activeLetter]);
+
+  function loadArtists() {
+    setLoading(true);
+    fetchArtists({
+      search: search || undefined,
+      letter: activeLetter || undefined,
+      page,
+      page_size: 60,
+    })
+      .then((data) => {
+        setArtists(data.items);
+        setTotalPages(data.total_pages);
+        setTotal(data.total);
+      })
+      .finally(() => setLoading(false));
+  }
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    setActiveLetter(null);
+    setPage(1);
+    loadArtists();
+  }
+
+  function handleLetterClick(letter: string) {
+    setSearch("");
+    setActiveLetter(activeLetter === letter ? null : letter);
+    setPage(1);
+  }
+
+  return (
+    <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 48px" }}>
+      <div style={{ padding: "48px 0 24px" }}>
+        <h1 style={{ fontSize: "2.5rem", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "8px" }}>Artists</h1>
+        <p style={{ color: "#888", fontSize: "1rem" }}>Browse {total > 0 ? `${total} ` : ""}artists in our directory</p>
+      </div>
+
+      <form onSubmit={handleSearch} style={{ marginBottom: "24px" }}>
+        <div style={{ display: "flex", gap: "12px", maxWidth: "500px" }}>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search artists..."
+            style={{
+              flex: 1, padding: "12px 20px", border: "1px solid #222", borderRadius: "20px",
+              fontSize: "0.9rem", background: "#111", color: "#fff", outline: "none", fontFamily: "var(--font-sans)",
+            }}
+          />
+          <button type="submit" style={{
+            padding: "12px 28px", background: "#4BFA94", color: "#000", border: "none", borderRadius: "20px",
+            fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em",
+          }}>
+            Search
+          </button>
+        </div>
+      </form>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "32px" }}>
+        {LETTERS.map((letter) => (
+          <button key={letter} onClick={() => handleLetterClick(letter)}
+            style={{
+              width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center",
+              border: activeLetter === letter ? "1px solid #4BFA94" : "1px solid #333",
+              borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
+              background: activeLetter === letter ? "#4BFA94" : "transparent",
+              color: activeLetter === letter ? "#000" : "#888",
+              transition: "all 0.2s ease",
+            }}>
+            {letter}
+          </button>
+        ))}
+        {activeLetter && (
+          <button onClick={() => { setActiveLetter(null); setPage(1); }}
+            style={{
+              padding: "0 14px", height: "36px", border: "1px solid #333", borderRadius: "4px",
+              cursor: "pointer", fontSize: "0.75rem", fontWeight: 500, background: "transparent", color: "#888",
+            }}>
+            Clear
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "64px", color: "#888" }}>Loading...</div>
+      ) : artists.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "64px" }}>
+          <h2 style={{ fontSize: "1.25rem", marginBottom: "8px" }}>No artists found</h2>
+          <p style={{ color: "#888" }}>Try a different search or letter</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
+          {artists.map((artist) => (
+            <div key={artist.id} style={{
+              background: "#111", borderRadius: "5px", padding: "20px 16px",
+              transition: "background 0.2s ease", cursor: "default",
+            }}>
+              <h3 style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: "6px", color: "#fff" }}>{artist.name}</h3>
+              {artist.genre && (
+                <span style={{
+                  display: "inline-block", padding: "2px 10px", background: "rgba(75, 250, 148, 0.12)",
+                  color: "#4BFA94", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: 600,
+                }}>
+                  {artist.genre}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: "8px", margin: "40px 0" }}>
+          {page > 1 && (
+            <button onClick={() => setPage(page - 1)} style={{
+              padding: "0 16px", height: "40px", border: "1px solid #222", borderRadius: "20px",
+              background: "transparent", color: "#888", cursor: "pointer", fontSize: "0.9rem",
+            }}>Prev</button>
+          )}
+          <span style={{ display: "flex", alignItems: "center", padding: "0 16px", color: "#888", fontSize: "0.9rem" }}>
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages && (
+            <button onClick={() => setPage(page + 1)} style={{
+              padding: "0 16px", height: "40px", border: "1px solid #4BFA94", borderRadius: "20px",
+              background: "#4BFA94", color: "#000", cursor: "pointer", fontWeight: 700, fontSize: "0.85rem",
+            }}>Next</button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

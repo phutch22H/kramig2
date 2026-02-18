@@ -4,12 +4,60 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import func as sa_func
+
 from src.db.session import get_db
+from src.models.artist import Artist
 from src.models.event import Event, EventArtist
 from src.models.organization import Organization
 from src.models.ticket import EventSellerLink, TicketSeller
 
 router = APIRouter(prefix="/public", tags=["public"])
+
+
+@router.get("/artists")
+async def browse_artists(
+    db: AsyncSession = Depends(get_db),
+    search: str | None = Query(None),
+    letter: str | None = Query(None),
+    genre: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, le=200),
+):
+    base = select(Artist)
+    if search:
+        base = base.where(Artist.name.ilike(f"%{search}%"))
+    if letter and len(letter) == 1:
+        base = base.where(Artist.name.ilike(f"{letter}%"))
+    if genre:
+        base = base.where(Artist.genre.ilike(f"%{genre}%"))
+
+    count_result = await db.execute(
+        select(sa_func.count()).select_from(base.with_only_columns(Artist.id).subquery())
+    )
+    total = count_result.scalar() or 0
+
+    offset = (page - 1) * page_size
+    query = base.order_by(Artist.name.asc()).limit(page_size).offset(offset)
+    result = await db.execute(query)
+    items = [
+        {"id": str(a.id), "name": a.name, "slug": a.slug, "image_url": a.image_url, "genre": a.genre}
+        for a in result.scalars().all()
+    ]
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+    return {"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": total_pages}
+
+
+@router.get("/artists/{slug}")
+async def artist_detail(slug: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Artist).where(Artist.slug == slug))
+    artist = result.scalar_one_or_none()
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artist not found")
+    return {
+        "id": str(artist.id), "name": artist.name, "slug": artist.slug,
+        "image_url": artist.image_url, "genre": artist.genre,
+    }
 
 
 @router.get("/events")
@@ -20,7 +68,6 @@ async def browse_events(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, le=100),
 ):
-    from sqlalchemy import func as sa_func
 
     base_query = select(Event, Organization).join(Organization, Event.org_id == Organization.id).where(
         Event.is_public == True,

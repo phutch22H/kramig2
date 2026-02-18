@@ -12,6 +12,7 @@ const navItems = [
   { label: "Customers", href: "/dashboard/customers" },
   { label: "Financials", href: "/dashboard/financials" },
   { label: "Connectors", href: "/dashboard/connectors" },
+  { label: "Artists", href: "/dashboard/artists" },
 ];
 
 const orgTypes = ["promoter", "venue", "agent", "artist"];

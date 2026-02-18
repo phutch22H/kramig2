@@ -154,6 +154,24 @@ export const api = {
     return apiRequest<Blob>(`/api/v1/financials/export/csv${qs}`);
   },
 
+  // Artist Directory
+  listArtistDirectory: (params?: { search?: string; page?: number; page_size?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set("search", params.search);
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.page_size) qs.set("page_size", String(params.page_size));
+    const q = qs.toString();
+    return apiRequest<any>(`/api/v1/artists${q ? `?${q}` : ""}`);
+  },
+  getArtistDirectory: (id: string) => apiRequest<any>(`/api/v1/artists/${id}`),
+  createArtistDirectory: (data: { name: string; image_url?: string; genre?: string }) =>
+    apiRequest<any>("/api/v1/artists", { method: "POST", body: data }),
+  updateArtistDirectory: (id: string, data: { name?: string; image_url?: string; genre?: string }) =>
+    apiRequest<any>(`/api/v1/artists/${id}`, { method: "PATCH", body: data }),
+  deleteArtistDirectory: (id: string) => apiRequest<void>(`/api/v1/artists/${id}`, { method: "DELETE" }),
+  bulkCreateArtists: (artists: { name: string; image_url?: string; genre?: string }[]) =>
+    apiRequest<{ created: number; skipped: number }>("/api/v1/artists/bulk", { method: "POST", body: { artists } }),
+
   // Connectors
   listSellers: () => apiRequest<any[]>("/api/v1/connectors/sellers"),
   connectorStatus: () => apiRequest<any[]>("/api/v1/connectors/status"),
