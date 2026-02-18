@@ -44,8 +44,8 @@ export default function CustomerDetailPage() {
   if (loading) return <div>Loading...</div>;
   if (!customer) return <div>Customer not found</div>;
 
-  const inputStyle = { width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.875rem", boxSizing: "border-box" as const };
-  const sectionStyle = { background: "white", padding: "1.25rem", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", marginBottom: "1.5rem" };
+  const inputStyle = { width: "100%", padding: "8px 12px", border: "1px solid #d4d4d4", borderRadius: "4px", fontSize: "13px", boxSizing: "border-box" as const };
+  const sectionStyle = { background: "white", padding: "1.25rem", borderRadius: "8px", border: "1px solid #e5e5e5", marginBottom: "1.5rem" };
 
   return (
     <div style={{ maxWidth: "700px" }}>
@@ -55,24 +55,24 @@ export default function CustomerDetailPage() {
           <div style={{ display: "flex", gap: "0.5rem" }}>
             {!editing ? (
               <>
-                <button onClick={() => setEditing(true)} style={{ padding: "0.375rem 0.75rem", background: "#6366f1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Edit</button>
-                <button onClick={handleDelete} style={{ padding: "0.375rem 0.75rem", background: "#dc2626", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Delete</button>
+                <button onClick={() => setEditing(true)} style={{ padding: "0.375rem 0.75rem", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Edit</button>
+                <button onClick={handleDelete} style={{ padding: "0.375rem 0.75rem", background: "#ff3b3b", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Delete</button>
               </>
             ) : (
               <>
-                <button onClick={handleSave} style={{ padding: "0.375rem 0.75rem", background: "#16a34a", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Save</button>
-                <button onClick={() => { setEditing(false); setForm(customer); }} style={{ padding: "0.375rem 0.75rem", background: "#6b7280", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
+                <button onClick={handleSave} style={{ padding: "0.375rem 0.75rem", background: "#00d97e", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Save</button>
+                <button onClick={() => { setEditing(false); setForm(customer); }} style={{ padding: "0.375rem 0.75rem", background: "#6b7280", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
               </>
             )}
           </div>
         </div>
         {editing ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <div><label style={{ fontSize: "0.75rem", color: "#6b7280" }}>First Name</label><input style={inputStyle} value={form.first_name || ""} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", color: "#6b7280" }}>Last Name</label><input style={inputStyle} value={form.last_name || ""} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", color: "#6b7280" }}>Phone</label><input style={inputStyle} value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.75rem", color: "#6b7280" }}>City</label><input style={inputStyle} value={form.city || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-            <div style={{ gridColumn: "1 / -1" }}><label style={{ fontSize: "0.75rem", color: "#6b7280" }}>Notes</label><textarea style={{ ...inputStyle, minHeight: "60px" }} value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <div><label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a3a3a3" }}>First Name</label><input style={inputStyle} value={form.first_name || ""} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
+            <div><label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a3a3a3" }}>Last Name</label><input style={inputStyle} value={form.last_name || ""} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
+            <div><label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a3a3a3" }}>Phone</label><input style={inputStyle} value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+            <div><label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a3a3a3" }}>City</label><input style={inputStyle} value={form.city || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+            <div style={{ gridColumn: "1 / -1" }}><label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a3a3a3" }}>Notes</label><textarea style={{ ...inputStyle, minHeight: "60px" }} value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.875rem", color: "#6b7280" }}>
@@ -84,7 +84,7 @@ export default function CustomerDetailPage() {
             <div>Total Spend: ${customer.total_spend?.toFixed(2)}</div>
             <div>Source: {customer.source || "—"}</div>
             <div>Tags: {(customer.tags || []).map((t: string) => (
-              <span key={t} style={{ display: "inline-block", padding: "0.125rem 0.375rem", background: "#e0e7ff", color: "#3730a3", borderRadius: "4px", fontSize: "0.7rem", marginRight: "0.25rem" }}>{t}</span>
+              <span key={t} style={{ display: "inline-block", padding: "0.125rem 0.375rem", background: "#dbeafe", color: "#2563eb", borderRadius: "4px", fontSize: "0.7rem", marginRight: "0.25rem" }}>{t}</span>
             ))}</div>
           </div>
         )}
@@ -95,20 +95,20 @@ export default function CustomerDetailPage() {
         {events.length > 0 ? (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
-              <tr style={{ background: "#f9fafb", color: "#6b7280" }}>
-                <th style={{ padding: "0.5rem", textAlign: "left" }}>Event</th>
-                <th style={{ padding: "0.5rem", textAlign: "right" }}>Tickets</th>
-                <th style={{ padding: "0.5rem", textAlign: "right" }}>Paid</th>
-                <th style={{ padding: "0.5rem", textAlign: "left" }}>Date</th>
+              <tr style={{ background: "#fafafa", fontSize: "11px", color: "#a3a3a3", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600 }}>Event</th>
+                <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Tickets</th>
+                <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Paid</th>
+                <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600 }}>Date</th>
               </tr>
             </thead>
             <tbody>
               {events.map((e) => (
-                <tr key={e.id} style={{ borderTop: "1px solid #f3f4f6" }}>
-                  <td style={{ padding: "0.5rem" }}>{e.event_name || e.event_id}</td>
-                  <td style={{ padding: "0.5rem", textAlign: "right" }}>{e.ticket_count}</td>
-                  <td style={{ padding: "0.5rem", textAlign: "right" }}>${e.total_paid?.toFixed(2)}</td>
-                  <td style={{ padding: "0.5rem" }}>{e.purchase_date ? new Date(e.purchase_date).toLocaleDateString() : "—"}</td>
+                <tr key={e.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                  <td style={{ padding: "10px 16px" }}>{e.event_name || e.event_id}</td>
+                  <td style={{ padding: "10px 16px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{e.ticket_count}</td>
+                  <td style={{ padding: "10px 16px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>${e.total_paid?.toFixed(2)}</td>
+                  <td style={{ padding: "10px 16px" }}>{e.purchase_date ? new Date(e.purchase_date).toLocaleDateString() : "—"}</td>
                 </tr>
               ))}
             </tbody>

@@ -40,14 +40,14 @@ export default function NewEventPage() {
     }
   }
 
-  const inputStyle = { width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.875rem", boxSizing: "border-box" as const };
-  const labelStyle = { display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem", color: "#374151" };
+  const inputStyle = { width: "100%", padding: "8px 12px", border: "1px solid #d4d4d4", borderRadius: "4px", fontSize: "13px", boxSizing: "border-box" as const };
+  const labelStyle = { display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em", color: "#a3a3a3", marginBottom: "0.25rem" };
 
   return (
     <div style={{ maxWidth: "640px" }}>
       <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1.5rem" }}>Create Event</h2>
-      {error && <div style={{ background: "#fef2f2", color: "#dc2626", padding: "0.75rem", borderRadius: "6px", marginBottom: "1rem", fontSize: "0.875rem" }}>{error}</div>}
-      <form onSubmit={handleSubmit} style={{ background: "white", padding: "1.5rem", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+      {error && <div style={{ background: "#fef2f2", color: "#ff3b3b", padding: "0.75rem", borderRadius: "4px", marginBottom: "1rem", fontSize: "0.875rem" }}>{error}</div>}
+      <form onSubmit={handleSubmit} style={{ background: "white", padding: "1.5rem", borderRadius: "6px", border: "1px solid #e5e5e5" }}>
         <div style={{ marginBottom: "1rem" }}>
           <label style={labelStyle}>Event Name *</label>
           <input style={inputStyle} value={form.name} onChange={(e) => update("name", e.target.value)} required />
@@ -106,11 +106,11 @@ export default function NewEventPage() {
         </div>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <button type="submit" disabled={loading}
-            style={{ padding: "0.5rem 1.5rem", background: "#6366f1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}>
+            style={{ padding: "0.5rem 1.5rem", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}>
             {loading ? "Creating..." : "Create Event"}
           </button>
           <button type="button" onClick={() => router.back()}
-            style={{ padding: "0.5rem 1.5rem", background: "white", color: "#374151", border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer", fontSize: "0.875rem" }}>
+            style={{ padding: "0.5rem 1.5rem", background: "white", color: "#374151", border: "1px solid #d4d4d4", borderRadius: "4px", cursor: "pointer", fontSize: "0.875rem" }}>
             Cancel
           </button>
         </div>

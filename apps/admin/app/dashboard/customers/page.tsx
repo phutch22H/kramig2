@@ -56,14 +56,14 @@ export default function CustomersPage() {
     setSelected(next);
   }
 
-  const btnStyle = { padding: "0.375rem 0.75rem", border: "1px solid #d1d5db", borderRadius: "6px", background: "white", cursor: "pointer", fontSize: "0.8rem" };
+  const btnStyle = { padding: "0.375rem 0.75rem", border: "1px solid #d4d4d4", borderRadius: "4px", background: "white", cursor: "pointer", fontSize: "12px" };
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && loadCustomers()}
-            placeholder="Search customers..." style={{ padding: "0.375rem 0.75rem", border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.875rem", width: "250px" }} />
+            placeholder="Search customers..." style={{ padding: "8px 12px", border: "1px solid #d4d4d4", borderRadius: "4px", fontSize: "13px", width: "220px" }} />
           <button onClick={loadCustomers} style={btnStyle}>Search</button>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -74,41 +74,41 @@ export default function CustomersPage() {
       </div>
 
       {selected.size > 0 && (
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "1rem", padding: "0.75rem", background: "#eef2ff", borderRadius: "6px" }}>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "1rem", padding: "0.75rem", background: "#eff6ff", borderRadius: "4px" }}>
           <span style={{ fontSize: "0.875rem" }}>{selected.size} selected</span>
-          <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Tag name" style={{ padding: "0.25rem 0.5rem", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "0.8rem" }} />
-          <button onClick={handleBulkTag} style={{ ...btnStyle, background: "#6366f1", color: "white", border: "none" }}>Add Tag</button>
+          <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Tag name" style={{ padding: "8px 12px", border: "1px solid #d4d4d4", borderRadius: "4px", fontSize: "13px" }} />
+          <button onClick={handleBulkTag} style={{ ...btnStyle, background: "#2563eb", color: "white", border: "none" }}>Add Tag</button>
         </div>
       )}
 
-      <div style={{ background: "white", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", overflow: "hidden" }}>
+      <div style={{ background: "white", borderRadius: "8px", border: "1px solid #e5e5e5", overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "#f9fafb", fontSize: "0.75rem", color: "#6b7280", textTransform: "uppercase" }}>
-              <th style={{ padding: "0.75rem 0.5rem", width: "32px" }}></th>
-              <th style={{ padding: "0.75rem 0.5rem", textAlign: "left" }}>Email</th>
-              <th style={{ padding: "0.75rem 0.5rem", textAlign: "left" }}>Name</th>
-              <th style={{ padding: "0.75rem 0.5rem", textAlign: "left" }}>Tags</th>
-              <th style={{ padding: "0.75rem 0.5rem", textAlign: "right" }}>Events</th>
-              <th style={{ padding: "0.75rem 0.5rem", textAlign: "right" }}>Spend</th>
+            <tr style={{ background: "#fafafa", fontSize: "11px", color: "#a3a3a3", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <th style={{ padding: "10px 16px", width: "32px", fontWeight: 600 }}></th>
+              <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600 }}>Email</th>
+              <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600 }}>Name</th>
+              <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600 }}>Tags</th>
+              <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Events</th>
+              <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Spend</th>
             </tr>
           </thead>
           <tbody>
             {customers.map((c) => (
-              <tr key={c.id} style={{ borderTop: "1px solid #f3f4f6", cursor: "pointer" }}
+              <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}
                 onClick={() => router.push(`/dashboard/customers/${c.id}`)}>
-                <td style={{ padding: "0.5rem", textAlign: "center" }} onClick={(e) => { e.stopPropagation(); toggleSelect(c.id); }}>
+                <td style={{ padding: "10px 16px", textAlign: "center" }} onClick={(e) => { e.stopPropagation(); toggleSelect(c.id); }}>
                   <input type="checkbox" checked={selected.has(c.id)} readOnly />
                 </td>
-                <td style={{ padding: "0.5rem", fontSize: "0.875rem" }}>{c.email}</td>
-                <td style={{ padding: "0.5rem", fontSize: "0.875rem" }}>{[c.first_name, c.last_name].filter(Boolean).join(" ") || "—"}</td>
-                <td style={{ padding: "0.5rem" }}>
+                <td style={{ padding: "10px 16px", fontSize: "0.875rem" }}>{c.email}</td>
+                <td style={{ padding: "10px 16px", fontSize: "0.875rem" }}>{[c.first_name, c.last_name].filter(Boolean).join(" ") || "—"}</td>
+                <td style={{ padding: "10px 16px" }}>
                   {(c.tags || []).map((t: string) => (
-                    <span key={t} style={{ display: "inline-block", padding: "0.125rem 0.375rem", background: "#e0e7ff", color: "#3730a3", borderRadius: "4px", fontSize: "0.7rem", marginRight: "0.25rem" }}>{t}</span>
+                    <span key={t} style={{ display: "inline-block", padding: "0.125rem 0.375rem", background: "#dbeafe", color: "#2563eb", borderRadius: "4px", fontSize: "10px", marginRight: "0.25rem" }}>{t}</span>
                   ))}
                 </td>
-                <td style={{ padding: "0.5rem", textAlign: "right", fontSize: "0.875rem" }}>{c.total_events_attended}</td>
-                <td style={{ padding: "0.5rem", textAlign: "right", fontSize: "0.875rem" }}>${c.total_spend?.toFixed(2)}</td>
+                <td style={{ padding: "10px 16px", textAlign: "right", fontSize: "0.875rem", fontVariantNumeric: "tabular-nums" }}>{c.total_events_attended}</td>
+                <td style={{ padding: "10px 16px", textAlign: "right", fontSize: "0.875rem", fontVariantNumeric: "tabular-nums" }}>${c.total_spend?.toFixed(2)}</td>
               </tr>
             ))}
             {customers.length === 0 && !loading && (

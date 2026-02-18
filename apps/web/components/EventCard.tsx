@@ -29,10 +29,11 @@ export default function EventCard({ event }: { event: Event }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "2rem",
+              fontSize: "2.5rem",
               color: "var(--color-primary)",
-              fontWeight: 700,
-              opacity: 0.4,
+              fontWeight: 800,
+              opacity: 0.6,
+              background: "var(--color-surface)",
             }}
           >
             {event.name.charAt(0)}

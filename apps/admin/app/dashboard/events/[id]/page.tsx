@@ -81,8 +81,8 @@ export default function EventDetailPage() {
   if (loading) return <div>Loading...</div>;
   if (!event) return <div>Event not found</div>;
 
-  const inputStyle = { width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.875rem", boxSizing: "border-box" as const };
-  const sectionStyle = { background: "white", padding: "1.25rem", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", marginBottom: "1.5rem" };
+  const inputStyle = { width: "100%", padding: "8px 12px", border: "1px solid #d4d4d4", borderRadius: "4px", fontSize: "13px", boxSizing: "border-box" as const };
+  const sectionStyle = { background: "white", padding: "1.25rem", borderRadius: "6px", border: "1px solid #e5e5e5", marginBottom: "1.5rem" };
 
   return (
     <div style={{ maxWidth: "800px" }}>
@@ -93,13 +93,13 @@ export default function EventDetailPage() {
           <div style={{ display: "flex", gap: "0.5rem" }}>
             {!editing ? (
               <>
-                <button onClick={() => setEditing(true)} style={{ padding: "0.375rem 0.75rem", background: "#6366f1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Edit</button>
-                <button onClick={handleDelete} style={{ padding: "0.375rem 0.75rem", background: "#dc2626", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Delete</button>
+                <button onClick={() => setEditing(true)} style={{ padding: "0.375rem 0.75rem", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Edit</button>
+                <button onClick={handleDelete} style={{ padding: "0.375rem 0.75rem", background: "#ff3b3b", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Delete</button>
               </>
             ) : (
               <>
-                <button onClick={handleSave} style={{ padding: "0.375rem 0.75rem", background: "#16a34a", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Save</button>
-                <button onClick={() => { setEditing(false); setEditForm(event); }} style={{ padding: "0.375rem 0.75rem", background: "#6b7280", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
+                <button onClick={handleSave} style={{ padding: "0.375rem 0.75rem", background: "#00d97e", color: "#0a0a0a", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>Save</button>
+                <button onClick={() => { setEditing(false); setEditForm(event); }} style={{ padding: "0.375rem 0.75rem", background: "#6b7280", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
               </>
             )}
           </div>
@@ -121,10 +121,10 @@ export default function EventDetailPage() {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.875rem", color: "#6b7280" }}>
-            <div>Venue: {event.venue_name || "—"}</div>
-            <div>Date: {event.event_date ? new Date(event.event_date).toLocaleString() : "—"}</div>
+            <div>Venue: {event.venue_name || "\u2014"}</div>
+            <div>Date: {event.event_date ? new Date(event.event_date).toLocaleString() : "\u2014"}</div>
             <div>Status: <span style={{ fontWeight: 600, color: "#111827" }}>{event.status}</span></div>
-            <div>Capacity: {event.capacity?.toLocaleString() || "—"}</div>
+            <div>Capacity: {event.capacity?.toLocaleString() || "\u2014"}</div>
             <div>Public: {event.is_public ? "Yes" : "No"}</div>
           </div>
         )}
@@ -134,14 +134,14 @@ export default function EventDetailPage() {
       <div style={sectionStyle}>
         <h3 style={{ fontWeight: 600, marginBottom: "0.75rem" }}>Artists</h3>
         {artists.map((a) => (
-          <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #f3f4f6" }}>
+          <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #f0f0f0" }}>
             <span>{a.artist_name} {a.is_headliner && <span style={{ fontSize: "0.7rem", background: "#fef3c7", color: "#92400e", padding: "0.125rem 0.375rem", borderRadius: "4px", marginLeft: "0.5rem" }}>Headliner</span>}</span>
-            <button onClick={() => handleRemoveArtist(a.id)} style={{ color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Remove</button>
+            <button onClick={() => handleRemoveArtist(a.id)} style={{ color: "#ff3b3b", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Remove</button>
           </div>
         ))}
         <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
           <input style={{ ...inputStyle, flex: 1 }} value={newArtist} onChange={(e) => setNewArtist(e.target.value)} placeholder="Artist name" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddArtist())} />
-          <button onClick={handleAddArtist} style={{ padding: "0.5rem 1rem", background: "#6366f1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", whiteSpace: "nowrap" }}>Add</button>
+          <button onClick={handleAddArtist} style={{ padding: "0.5rem 1rem", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem", whiteSpace: "nowrap" }}>Add</button>
         </div>
       </div>
 
@@ -149,13 +149,13 @@ export default function EventDetailPage() {
       <div style={sectionStyle}>
         <h3 style={{ fontWeight: 600, marginBottom: "0.75rem" }}>Ticket Seller Links</h3>
         {sellerLinks.map((l) => (
-          <div key={l.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #f3f4f6", fontSize: "0.875rem" }}>
+          <div key={l.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #f0f0f0", fontSize: "0.875rem" }}>
             <div>
               <span style={{ fontWeight: 500 }}>{l.seller_name}</span>
               <span style={{ color: "#6b7280", marginLeft: "0.5rem" }}>ID: {l.external_event_id}</span>
             </div>
             <button onClick={async () => { await api.removeSellerLink(eventId, l.id); setSellerLinks(sellerLinks.filter((s) => s.id !== l.id)); }}
-              style={{ color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Unlink</button>
+              style={{ color: "#ff3b3b", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Unlink</button>
           </div>
         ))}
         {sellerLinks.length === 0 && <div style={{ color: "#9ca3af", fontSize: "0.875rem" }}>No sellers linked. Connect a seller in Connectors settings first.</div>}
@@ -165,27 +165,27 @@ export default function EventDetailPage() {
       <div style={sectionStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
           <h3 style={{ fontWeight: 600 }}>Ticket Counts</h3>
-          <button onClick={handlePoll} style={{ padding: "0.375rem 0.75rem", background: "#6366f1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Poll Now</button>
+          <button onClick={handlePoll} style={{ padding: "0.375rem 0.75rem", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem" }}>Poll Now</button>
         </div>
         {ticketCounts.length > 0 ? (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
-              <tr style={{ background: "#f9fafb", color: "#6b7280" }}>
-                <th style={{ padding: "0.5rem", textAlign: "left" }}>Seller</th>
-                <th style={{ padding: "0.5rem", textAlign: "right" }}>Sold</th>
-                <th style={{ padding: "0.5rem", textAlign: "right" }}>Available</th>
-                <th style={{ padding: "0.5rem", textAlign: "right" }}>Capacity</th>
-                <th style={{ padding: "0.5rem", textAlign: "right" }}>Sell-Through</th>
+              <tr style={{ background: "#fafafa", fontSize: "11px", color: "#a3a3a3", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600 }}>Seller</th>
+                <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Sold</th>
+                <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Available</th>
+                <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Capacity</th>
+                <th style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>Sell-Through</th>
               </tr>
             </thead>
             <tbody>
               {ticketCounts.map((t, i) => (
-                <tr key={i} style={{ borderTop: "1px solid #f3f4f6" }}>
-                  <td style={{ padding: "0.5rem" }}>{t.seller_name}</td>
-                  <td style={{ padding: "0.5rem", textAlign: "right" }}>{t.total_sold?.toLocaleString()}</td>
-                  <td style={{ padding: "0.5rem", textAlign: "right" }}>{t.total_available?.toLocaleString()}</td>
-                  <td style={{ padding: "0.5rem", textAlign: "right" }}>{t.total_capacity?.toLocaleString()}</td>
-                  <td style={{ padding: "0.5rem", textAlign: "right" }}>{t.sell_through_pct}%</td>
+                <tr key={i} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                  <td style={{ padding: "10px 16px" }}>{t.seller_name}</td>
+                  <td style={{ padding: "10px 16px", textAlign: "right" }}>{t.total_sold?.toLocaleString()}</td>
+                  <td style={{ padding: "10px 16px", textAlign: "right" }}>{t.total_available?.toLocaleString()}</td>
+                  <td style={{ padding: "10px 16px", textAlign: "right" }}>{t.total_capacity?.toLocaleString()}</td>
+                  <td style={{ padding: "10px 16px", textAlign: "right" }}>{t.sell_through_pct}%</td>
                 </tr>
               ))}
             </tbody>

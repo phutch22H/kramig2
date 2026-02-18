@@ -64,39 +64,39 @@ export default function ConnectorsPage() {
 
   if (loading) return <div>Loading...</div>;
 
-  const inputStyle = { width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.875rem", boxSizing: "border-box" as const };
+  const inputStyle = { width: "100%", padding: "8px 12px", border: "1px solid #d4d4d4", borderRadius: "4px", fontSize: "13px", boxSizing: "border-box" as const };
 
   return (
     <div style={{ maxWidth: "700px" }}>
-      <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1.5rem" }}>Ticket Seller Connections</h2>
+      <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1.25rem", letterSpacing: "-0.01em" }}>Ticket Seller Connections</h2>
 
       {sellers.map((seller) => {
         const status = getStatus(seller.id);
         const isConnecting = connectForm?.sellerId === seller.id;
 
         return (
-          <div key={seller.id} style={{ background: "white", padding: "1.25rem", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", marginBottom: "1rem" }}>
+          <div key={seller.id} style={{ background: "white", padding: "20px", borderRadius: "6px", border: "1px solid #e5e5e5", marginBottom: "12px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <h3 style={{ fontWeight: 600, fontSize: "1rem" }}>{seller.name}</h3>
-                {seller.website_url && <a href={seller.website_url} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "#6366f1" }}>{seller.website_url}</a>}
+                <h3 style={{ fontWeight: 600, fontSize: "0.9rem" }}>{seller.name}</h3>
+                {seller.website_url && <a href={seller.website_url} target="_blank" rel="noreferrer" style={{ fontSize: "0.7rem", color: "#2563eb" }}>{seller.website_url}</a>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 {status?.is_connected && status?.is_active ? (
                   <>
-                    <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: status.last_test_success ? "#16a34a" : "#f59e0b" }} />
-                    <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+                    <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: status.last_test_success ? "#00d97e" : "#f59e0b" }} />
+                    <span style={{ fontSize: "0.75rem", color: "#525252" }}>
                       {status.last_test_success ? "Connected" : "Connection issue"}
                     </span>
                   </>
                 ) : (
-                  <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Not connected</span>
+                  <span style={{ fontSize: "0.75rem", color: "#a3a3a3" }}>Not connected</span>
                 )}
               </div>
             </div>
 
             {status?.last_tested_at && (
-              <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.5rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "#a3a3a3", marginTop: "0.5rem" }}>
                 Last tested: {new Date(status.last_tested_at).toLocaleString()}
               </div>
             )}
@@ -105,35 +105,35 @@ export default function ConnectorsPage() {
               {status?.is_connected && status?.is_active ? (
                 <>
                   <button onClick={() => handleTest(seller.id)} disabled={testing === seller.id}
-                    style={{ padding: "0.375rem 0.75rem", background: "#6366f1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                    style={{ padding: "5px 10px", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 500 }}>
                     {testing === seller.id ? "Testing..." : "Test Connection"}
                   </button>
                   <button onClick={() => handleDisconnect(seller.id)}
-                    style={{ padding: "0.375rem 0.75rem", background: "white", color: "#dc2626", border: "1px solid #dc2626", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                    style={{ padding: "5px 10px", background: "white", color: "#ff3b3b", border: "1px solid #ff3b3b", borderRadius: "4px", cursor: "pointer", fontSize: "0.75rem" }}>
                     Disconnect
                   </button>
                 </>
               ) : (
                 <button onClick={() => setConnectForm({ sellerId: seller.id, apiKey: "", apiSecret: "" })}
-                  style={{ padding: "0.375rem 0.75rem", background: "#6366f1", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                  style={{ padding: "5px 10px", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 500 }}>
                   Connect
                 </button>
               )}
             </div>
 
             {isConnecting && connectForm && (
-              <form onSubmit={handleConnect} style={{ marginTop: "1rem", padding: "1rem", background: "#f9fafb", borderRadius: "6px" }}>
+              <form onSubmit={handleConnect} style={{ marginTop: "1rem", padding: "1rem", background: "#fafafa", borderRadius: "4px" }}>
                 <div style={{ marginBottom: "0.75rem" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 500, display: "block", marginBottom: "0.25rem" }}>API Key</label>
+                  <label style={{ fontSize: "11px", fontWeight: 600, display: "block", marginBottom: "4px", color: "#a3a3a3", textTransform: "uppercase", letterSpacing: "0.04em" }}>API Key</label>
                   <input style={inputStyle} value={connectForm.apiKey} onChange={(e) => setConnectForm({ ...connectForm, apiKey: e.target.value })} required />
                 </div>
                 <div style={{ marginBottom: "0.75rem" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 500, display: "block", marginBottom: "0.25rem" }}>API Secret (optional)</label>
+                  <label style={{ fontSize: "11px", fontWeight: 600, display: "block", marginBottom: "4px", color: "#a3a3a3", textTransform: "uppercase", letterSpacing: "0.04em" }}>API Secret (optional)</label>
                   <input style={inputStyle} type="password" value={connectForm.apiSecret} onChange={(e) => setConnectForm({ ...connectForm, apiSecret: e.target.value })} />
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button type="submit" style={{ padding: "0.375rem 1rem", background: "#16a34a", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>Connect & Test</button>
-                  <button type="button" onClick={() => setConnectForm(null)} style={{ padding: "0.375rem 1rem", background: "white", border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>Cancel</button>
+                  <button type="submit" style={{ padding: "5px 12px", background: "#00d97e", color: "#0a0a0a", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}>Connect & Test</button>
+                  <button type="button" onClick={() => setConnectForm(null)} style={{ padding: "5px 12px", background: "white", border: "1px solid #d4d4d4", borderRadius: "4px", cursor: "pointer", fontSize: "0.75rem" }}>Cancel</button>
                 </div>
               </form>
             )}
@@ -141,7 +141,7 @@ export default function ConnectorsPage() {
         );
       })}
 
-      {sellers.length === 0 && <div style={{ color: "#9ca3af", textAlign: "center", padding: "2rem" }}>No ticket sellers available</div>}
+      {sellers.length === 0 && <div style={{ color: "#a3a3a3", textAlign: "center", padding: "2rem" }}>No ticket sellers available</div>}
     </div>
   );
 }
