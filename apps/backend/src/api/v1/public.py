@@ -48,18 +48,6 @@ async def browse_artists(
     return {"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": total_pages}
 
 
-@router.get("/artists/{slug}")
-async def artist_detail(slug: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Artist).where(Artist.slug == slug))
-    artist = result.scalar_one_or_none()
-    if not artist:
-        raise HTTPException(status_code=404, detail="Artist not found")
-    return {
-        "id": str(artist.id), "name": artist.name, "slug": artist.slug,
-        "image_url": artist.image_url, "genre": artist.genre,
-    }
-
-
 @router.get("/artists/{slug}/similar")
 async def similar_artists(
     slug: str,
@@ -101,6 +89,18 @@ async def similar_artists(
     return {
         "artist": {"id": str(artist.id), "name": artist.name, "slug": artist.slug, "genre": artist.genre, "image_url": artist.image_url},
         "similar": scored[:limit],
+    }
+
+
+@router.get("/artists/{slug}")
+async def artist_detail(slug: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Artist).where(Artist.slug == slug))
+    artist = result.scalar_one_or_none()
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artist not found")
+    return {
+        "id": str(artist.id), "name": artist.name, "slug": artist.slug,
+        "image_url": artist.image_url, "genre": artist.genre,
     }
 
 
