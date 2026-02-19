@@ -10,7 +10,7 @@ export interface Event {
   city?: string;
   image_url?: string;
   organizer?: string;
-  artists?: string[];
+  artists?: { name: string; is_headliner?: boolean; genre?: string; spotify_track_url?: string }[];
   buy_links?: { label: string; url: string }[];
 }
 
@@ -94,7 +94,12 @@ export async function fetchEventDetail(id: string): Promise<Event | null> {
       city: data.venue_address,
       image_url: data.image_url,
       organizer: data.organizer,
-      artists: (data.artists || []).map((a: any) => a.name),
+      artists: (data.artists || []).map((a: any) => ({
+        name: a.name,
+        is_headliner: a.is_headliner,
+        genre: a.genre,
+        spotify_track_url: a.spotify_track_url,
+      })),
       buy_links: (data.buy_links || []).map((l: any) => ({ label: l.seller, url: l.url })),
     };
   } catch (error) {
@@ -109,6 +114,7 @@ export interface Artist {
   slug: string;
   image_url?: string;
   genre?: string;
+  spotify_track_url?: string;
 }
 
 export interface ArtistsResponse {

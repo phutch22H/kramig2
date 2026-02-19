@@ -41,7 +41,7 @@ async def browse_artists(
     query = base.order_by(Artist.name.asc()).limit(page_size).offset(offset)
     result = await db.execute(query)
     items = [
-        {"id": str(a.id), "name": a.name, "slug": a.slug, "image_url": a.image_url, "genre": a.genre}
+        {"id": str(a.id), "name": a.name, "slug": a.slug, "image_url": a.image_url, "genre": a.genre, "spotify_track_url": a.spotify_track_url}
         for a in result.scalars().all()
     ]
     total_pages = (total + page_size - 1) // page_size if total > 0 else 0
@@ -81,6 +81,7 @@ async def similar_artists(
         scored.append({
             "id": str(c.id), "name": c.name, "slug": c.slug,
             "image_url": c.image_url, "genre": c.genre,
+            "spotify_track_url": c.spotify_track_url,
             "affinity_score": round(affinity, 2),
         })
 
@@ -100,7 +101,7 @@ async def artist_detail(slug: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Artist not found")
     return {
         "id": str(artist.id), "name": artist.name, "slug": artist.slug,
-        "image_url": artist.image_url, "genre": artist.genre,
+        "image_url": artist.image_url, "genre": artist.genre, "spotify_track_url": artist.spotify_track_url,
     }
 
 
@@ -164,11 +165,19 @@ async def event_detail(event_id: str, db: AsyncSession = Depends(get_db)):
     event, org = row
 
     artists_result = await db.execute(
-        select(EventArtist).where(EventArtist.event_id == event.id).order_by(EventArtist.sort_order)
+        select(EventArtist, Artist)
+        .outerjoin(Artist, EventArtist.artist_id == Artist.id)
+        .where(EventArtist.event_id == event.id)
+        .order_by(EventArtist.sort_order)
     )
     artists = [
-        {"name": a.artist_name, "is_headliner": a.is_headliner}
-        for a in artists_result.scalars().all()
+        {
+            "name": ea.artist_name,
+            "is_headliner": ea.is_headliner,
+            "genre": artist.genre if artist else None,
+            "spotify_track_url": artist.spotify_track_url if artist else None,
+        }
+        for ea, artist in artists_result.all()
     ]
 
     links_result = await db.execute(
