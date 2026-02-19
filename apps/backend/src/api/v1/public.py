@@ -59,11 +59,44 @@ async def similar_artists(
     if not artist:
         raise HTTPException(status_code=404, detail="Artist not found")
 
+    artist_dict = {
+        "id": str(artist.id), "name": artist.name, "slug": artist.slug,
+        "genre": artist.genre, "image_url": artist.image_url, "spotify_track_url": artist.spotify_track_url,
+    }
+
+    # Try Last.fm first
+    from src.services.lastfm import get_similar_artists as lastfm_similar
+    lastfm_results = await lastfm_similar(artist.name, limit=50)
+
+    if lastfm_results:
+        # Match Last.fm names against our artist directory (case-insensitive)
+        lastfm_names = [r["name"].lower() for r in lastfm_results]
+        match_lookup = {r["name"].lower(): r["match"] for r in lastfm_results}
+
+        all_artists = await db.execute(
+            select(Artist).where(Artist.id != artist.id)
+        )
+        directory = all_artists.scalars().all()
+
+        scored = []
+        for a in directory:
+            name_lower = a.name.lower()
+            if name_lower in match_lookup:
+                scored.append({
+                    "id": str(a.id), "name": a.name, "slug": a.slug,
+                    "image_url": a.image_url, "genre": a.genre,
+                    "spotify_track_url": a.spotify_track_url,
+                    "affinity_score": round(match_lookup[name_lower], 2),
+                })
+
+        scored.sort(key=lambda x: (-x["affinity_score"], x["name"]))
+
+        if scored:
+            return {"artist": artist_dict, "similar": scored[:limit]}
+
+    # Fallback: genre affinity
     if not artist.genre:
-        return {
-            "artist": {"id": str(artist.id), "name": artist.name, "slug": artist.slug, "genre": artist.genre, "image_url": artist.image_url},
-            "similar": [],
-        }
+        return {"artist": artist_dict, "similar": []}
 
     from src.services.genre_affinity import get_related_genres
     related = get_related_genres(artist.genre, min_affinity=0.3)
@@ -87,10 +120,7 @@ async def similar_artists(
 
     scored.sort(key=lambda x: (-x["affinity_score"], x["name"]))
 
-    return {
-        "artist": {"id": str(artist.id), "name": artist.name, "slug": artist.slug, "genre": artist.genre, "image_url": artist.image_url},
-        "similar": scored[:limit],
-    }
+    return {"artist": artist_dict, "similar": scored[:limit]}
 
 
 @router.get("/artists/{slug}")
