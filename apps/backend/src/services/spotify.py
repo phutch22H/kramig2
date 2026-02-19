@@ -29,26 +29,14 @@ async def get_top_track_url(artist_name: str) -> str | None:
             access_token = token_resp.json()["access_token"]
             headers = {"Authorization": f"Bearer {access_token}"}
 
-            # Search for artist
+            # Search for top track by artist name
             search_resp = await client.get(
                 "https://api.spotify.com/v1/search",
-                params={"q": artist_name, "type": "artist", "limit": 1},
+                params={"q": f"artist:{artist_name}", "type": "track", "limit": 1},
                 headers=headers,
             )
             search_resp.raise_for_status()
-            artists = search_resp.json().get("artists", {}).get("items", [])
-            if not artists:
-                return None
-
-            spotify_artist_id = artists[0]["id"]
-
-            # Get top tracks
-            tracks_resp = await client.get(
-                f"https://api.spotify.com/v1/artists/{spotify_artist_id}/top-tracks",
-                headers=headers,
-            )
-            tracks_resp.raise_for_status()
-            tracks = tracks_resp.json().get("tracks", [])
+            tracks = search_resp.json().get("tracks", {}).get("items", [])
             if not tracks:
                 return None
 
