@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
@@ -14,12 +14,29 @@ export default function EventDetailPage() {
   const [ticketCounts, setTicketCounts] = useState<any[]>([]);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
-  const [newArtist, setNewArtist] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Artist picker state
+  const [artistSearch, setArtistSearch] = useState("");
+  const [artistResults, setArtistResults] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchingArtists, setSearchingArtists] = useState(false);
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadAll();
   }, [eventId]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   async function loadAll() {
     setLoading(true);
@@ -54,10 +71,51 @@ export default function EventDetailPage() {
     } catch {}
   }
 
-  async function handleAddArtist() {
-    if (!newArtist.trim()) return;
-    await api.addArtist(eventId, { artist_name: newArtist, is_headliner: artists.length === 0 });
-    setNewArtist("");
+  function handleArtistSearchChange(value: string) {
+    setArtistSearch(value);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (value.trim().length < 2) {
+      setArtistResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    searchTimeout.current = setTimeout(async () => {
+      setSearchingArtists(true);
+      try {
+        const data = await api.listArtistDirectory({ search: value.trim(), page_size: 8 });
+        setArtistResults(data.items || []);
+        setShowDropdown(true);
+      } catch {
+        setArtistResults([]);
+      } finally {
+        setSearchingArtists(false);
+      }
+    }, 300);
+  }
+
+  async function handleAddFromDirectory(directoryArtist: any) {
+    await api.addArtist(eventId, {
+      artist_name: directoryArtist.name,
+      artist_id: directoryArtist.id,
+      is_headliner: artists.length === 0,
+      sort_order: artists.length,
+    });
+    setArtistSearch("");
+    setShowDropdown(false);
+    const arts = await api.listArtists(eventId);
+    setArtists(arts);
+  }
+
+  async function handleAddNewArtist() {
+    const name = artistSearch.trim();
+    if (!name) return;
+    await api.addArtist(eventId, {
+      artist_name: name,
+      is_headliner: artists.length === 0,
+      sort_order: artists.length,
+    });
+    setArtistSearch("");
+    setShowDropdown(false);
     const arts = await api.listArtists(eventId);
     setArtists(arts);
   }
@@ -135,13 +193,65 @@ export default function EventDetailPage() {
         <h3 style={{ fontWeight: 600, marginBottom: "0.75rem" }}>Artists</h3>
         {artists.map((a) => (
           <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid #f0f0f0" }}>
-            <span>{a.artist_name} {a.is_headliner && <span style={{ fontSize: "0.7rem", background: "#fef3c7", color: "#92400e", padding: "0.125rem 0.375rem", borderRadius: "4px", marginLeft: "0.5rem" }}>Headliner</span>}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 500, fontSize: "0.875rem" }}>{a.artist_name}</span>
+              {a.is_headliner && <span style={{ fontSize: "0.7rem", background: "#fef3c7", color: "#92400e", padding: "0.125rem 0.375rem", borderRadius: "4px" }}>Headliner</span>}
+              {a.genre && <span style={{ fontSize: "0.7rem", background: "#dbeafe", color: "#2563eb", padding: "0.125rem 0.375rem", borderRadius: "4px" }}>{a.genre}</span>}
+              {a.spotify_track_url && (
+                <a href={a.spotify_track_url} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: "0.7rem", background: "#ecfdf5", color: "#059669", padding: "0.125rem 0.375rem", borderRadius: "4px", textDecoration: "none" }}>
+                  Spotify
+                </a>
+              )}
+            </div>
             <button onClick={() => handleRemoveArtist(a.id)} style={{ color: "#ff3b3b", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>Remove</button>
           </div>
         ))}
-        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
-          <input style={{ ...inputStyle, flex: 1 }} value={newArtist} onChange={(e) => setNewArtist(e.target.value)} placeholder="Artist name" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddArtist())} />
-          <button onClick={handleAddArtist} style={{ padding: "0.5rem 1rem", background: "#2563eb", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem", whiteSpace: "nowrap" }}>Add</button>
+        <div ref={dropdownRef} style={{ position: "relative", marginTop: "0.75rem" }}>
+          <input
+            style={{ ...inputStyle, width: "100%" }}
+            value={artistSearch}
+            onChange={(e) => handleArtistSearchChange(e.target.value)}
+            onFocus={() => artistResults.length > 0 && setShowDropdown(true)}
+            placeholder="Search for an artist to add..."
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddNewArtist())}
+          />
+          {showDropdown && (
+            <div style={{
+              position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+              background: "white", border: "1px solid #d4d4d4", borderRadius: "4px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", maxHeight: "240px", overflowY: "auto",
+              marginTop: "2px",
+            }}>
+              {searchingArtists && <div style={{ padding: "8px 12px", fontSize: "12px", color: "#a3a3a3" }}>Searching...</div>}
+              {artistResults.map((a) => (
+                <div key={a.id} onClick={() => handleAddFromDirectory(a)}
+                  style={{
+                    padding: "8px 12px", cursor: "pointer", fontSize: "13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    borderBottom: "1px solid #f5f5f5",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f7")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                >
+                  <span>{a.name}</span>
+                  {a.genre && <span style={{ fontSize: "11px", color: "#2563eb", background: "#dbeafe", padding: "1px 6px", borderRadius: "3px" }}>{a.genre}</span>}
+                </div>
+              ))}
+              {!searchingArtists && artistSearch.trim().length >= 2 && (
+                <div onClick={handleAddNewArtist}
+                  style={{
+                    padding: "8px 12px", cursor: "pointer", fontSize: "13px",
+                    color: "#059669", fontWeight: 500, borderTop: artistResults.length > 0 ? "1px solid #e5e5e5" : "none",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#ecfdf5")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                >
+                  + Add &quot;{artistSearch.trim()}&quot; as new artist
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

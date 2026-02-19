@@ -45,12 +45,17 @@ class EventArtist(Base):
     event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("events.id", ondelete="CASCADE"), nullable=False
     )
+    artist_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("artists.id", ondelete="SET NULL"), nullable=True
+    )
     artist_name: Mapped[str] = mapped_column(String(255), nullable=False)
     is_headliner: Mapped[bool] = mapped_column(default=False)
     sort_order: Mapped[int] = mapped_column(default=0)
 
     event: Mapped["Event"] = relationship(back_populates="artists")
+    artist: Mapped["Artist | None"] = relationship()
 
 
+from src.models.artist import Artist  # noqa: E402
 from src.models.organization import Organization  # noqa: E402
 from src.models.ticket import EventSellerLink  # noqa: E402

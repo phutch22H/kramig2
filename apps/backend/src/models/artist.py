@@ -25,6 +25,7 @@ class Artist(Base):
     slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     genre: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    spotify_track_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import get_db
 from src.middleware.tenant import TenantContext, get_tenant_context, require_role
+from src.models.artist import Artist, slugify
 from src.models.event import Event, EventArtist
 from src.models.ticket import EventSellerLink, TicketSeller
 from src.schemas.event import (
@@ -93,12 +94,54 @@ async def add_artist(
     db: AsyncSession = Depends(get_db),
 ):
     await _get_org_event(db, ctx.org_id, event_id)
-    artist = EventArtist(event_id=uuid.UUID(event_id), **body.model_dump())
-    db.add(artist)
+
+    directory_artist: Artist | None = None
+
+    # Link to Artist directory
+    if body.artist_id:
+        result = await db.execute(select(Artist).where(Artist.id == uuid.UUID(body.artist_id)))
+        directory_artist = result.scalar_one_or_none()
+    else:
+        # Try to find by name in directory
+        result = await db.execute(select(Artist).where(Artist.name.ilike(body.artist_name)))
+        directory_artist = result.scalar_one_or_none()
+        if not directory_artist:
+            # Create new artist in directory
+            slug = slugify(body.artist_name)
+            if slug:
+                directory_artist = Artist(name=body.artist_name, slug=slug)
+                db.add(directory_artist)
+                await db.flush()
+
+    # Fetch Spotify URL if not already set
+    if directory_artist and not directory_artist.spotify_track_url:
+        try:
+            from src.services.spotify import get_top_track_url
+            url = await get_top_track_url(directory_artist.name)
+            if url:
+                directory_artist.spotify_track_url = url
+                await db.flush()
+        except Exception:
+            pass
+
+    event_artist = EventArtist(
+        event_id=uuid.UUID(event_id),
+        artist_id=directory_artist.id if directory_artist else None,
+        artist_name=directory_artist.name if directory_artist else body.artist_name,
+        is_headliner=body.is_headliner,
+        sort_order=body.sort_order,
+    )
+    db.add(event_artist)
     await db.flush()
+
     return ArtistResponse(
-        id=str(artist.id), artist_name=artist.artist_name,
-        is_headliner=artist.is_headliner, sort_order=artist.sort_order,
+        id=str(event_artist.id),
+        artist_name=event_artist.artist_name,
+        artist_id=str(directory_artist.id) if directory_artist else None,
+        is_headliner=event_artist.is_headliner,
+        sort_order=event_artist.sort_order,
+        genre=directory_artist.genre if directory_artist else None,
+        spotify_track_url=directory_artist.spotify_track_url if directory_artist else None,
     )
 
 
@@ -110,11 +153,20 @@ async def list_artists(
 ):
     await _get_org_event(db, ctx.org_id, event_id)
     result = await db.execute(
-        select(EventArtist).where(EventArtist.event_id == uuid.UUID(event_id)).order_by(EventArtist.sort_order)
+        select(EventArtist, Artist)
+        .outerjoin(Artist, EventArtist.artist_id == Artist.id)
+        .where(EventArtist.event_id == uuid.UUID(event_id))
+        .order_by(EventArtist.sort_order)
     )
     return [
-        ArtistResponse(id=str(a.id), artist_name=a.artist_name, is_headliner=a.is_headliner, sort_order=a.sort_order)
-        for a in result.scalars().all()
+        ArtistResponse(
+            id=str(ea.id), artist_name=ea.artist_name,
+            artist_id=str(ea.artist_id) if ea.artist_id else None,
+            is_headliner=ea.is_headliner, sort_order=ea.sort_order,
+            genre=artist.genre if artist else None,
+            spotify_track_url=artist.spotify_track_url if artist else None,
+        )
+        for ea, artist in result.all()
     ]
 
 

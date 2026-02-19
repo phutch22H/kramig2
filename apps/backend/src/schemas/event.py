@@ -51,6 +51,7 @@ class EventResponse(BaseModel):
 
 class ArtistCreate(BaseModel):
     artist_name: str
+    artist_id: str | None = None
     is_headliner: bool = False
     sort_order: int = 0
 
@@ -58,8 +59,11 @@ class ArtistCreate(BaseModel):
 class ArtistResponse(BaseModel):
     id: str
     artist_name: str
+    artist_id: str | None = None
     is_headliner: bool
     sort_order: int
+    genre: str | None = None
+    spotify_track_url: str | None = None
 
     model_config = {"from_attributes": True}
 
