@@ -9,6 +9,7 @@ from src.middleware.tenant import TenantContext, get_tenant_context, require_rol
 from src.models.artist import Artist, slugify
 from src.models.event import Event, EventArtist
 from src.models.ticket import EventSellerLink, TicketSeller
+from src.models.venue import Venue
 from src.schemas.event import (
     ArtistCreate,
     ArtistResponse,
@@ -28,7 +29,14 @@ async def create_event(
     ctx: TenantContext = Depends(require_role("owner", "admin", "editor")),
     db: AsyncSession = Depends(get_db),
 ):
-    event = Event(org_id=ctx.org_id, **body.model_dump())
+    data = body.model_dump()
+    # Auto-fill venue_name/venue_address from Venue directory
+    if data.get("venue_id"):
+        venue = await _lookup_venue(db, data["venue_id"])
+        if venue:
+            data["venue_name"] = venue.name
+            data["venue_address"] = venue.address
+    event = Event(org_id=ctx.org_id, **data)
     db.add(event)
     await db.flush()
     return _event_response(event)
@@ -68,7 +76,14 @@ async def update_event(
     db: AsyncSession = Depends(get_db),
 ):
     event = await _get_org_event(db, ctx.org_id, event_id)
-    for field, value in body.model_dump(exclude_unset=True).items():
+    data = body.model_dump(exclude_unset=True)
+    # Auto-fill venue_name/venue_address from Venue directory
+    if "venue_id" in data and data["venue_id"]:
+        venue = await _lookup_venue(db, data["venue_id"])
+        if venue:
+            data["venue_name"] = venue.name
+            data["venue_address"] = venue.address
+    for field, value in data.items():
         setattr(event, field, value)
     await db.flush()
     return _event_response(event)
@@ -261,12 +276,18 @@ async def _get_org_event(db: AsyncSession, org_id: uuid.UUID, event_id: str) -> 
     return event
 
 
+async def _lookup_venue(db: AsyncSession, venue_id: str) -> Venue | None:
+    result = await db.execute(select(Venue).where(Venue.id == uuid.UUID(venue_id)))
+    return result.scalar_one_or_none()
+
+
 def _event_response(event: Event) -> EventResponse:
     return EventResponse(
         id=str(event.id), org_id=str(event.org_id), name=event.name,
-        description=event.description, venue_name=event.venue_name,
-        venue_address=event.venue_address, event_date=event.event_date,
-        doors_open=event.doors_open, on_sale_date=event.on_sale_date,
-        capacity=event.capacity, status=event.status, image_url=event.image_url,
+        description=event.description, venue_id=str(event.venue_id) if event.venue_id else None,
+        venue_name=event.venue_name, venue_address=event.venue_address,
+        event_date=event.event_date, doors_open=event.doors_open,
+        on_sale_date=event.on_sale_date, capacity=event.capacity,
+        status=event.status, image_url=event.image_url,
         is_public=event.is_public, created_at=event.created_at,
     )

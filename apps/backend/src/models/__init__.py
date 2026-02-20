@@ -11,6 +11,7 @@ from src.models.ticket import (
 from src.models.customer import Customer, CustomerEvent
 from src.models.financial import FinancialReport
 from src.models.artist import Artist
+from src.models.venue import Venue
 
 __all__ = [
     "Organization",
@@ -29,4 +30,5 @@ __all__ = [
     "CustomerEvent",
     "FinancialReport",
     "Artist",
+    "Venue",
 ]

@@ -10,6 +10,7 @@ from src.api.v1.connectors import router as connectors_router
 from src.api.v1.public import router as public_router
 from src.api.v1.sharing import router as sharing_router
 from src.api.v1.artists import router as artists_router
+from src.api.v1.venues import router as venues_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -23,3 +24,4 @@ api_router.include_router(connectors_router)
 api_router.include_router(public_router)
 api_router.include_router(sharing_router)
 api_router.include_router(artists_router)
+api_router.include_router(venues_router)

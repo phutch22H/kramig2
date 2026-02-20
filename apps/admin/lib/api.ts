@@ -172,6 +172,24 @@ export const api = {
   bulkCreateArtists: (artists: { name: string; image_url?: string; genre?: string }[]) =>
     apiRequest<{ created: number; skipped: number }>("/api/v1/artists/bulk", { method: "POST", body: { artists } }),
 
+  // Venue Directory
+  listVenueDirectory: (params?: { search?: string; page?: number; page_size?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set("search", params.search);
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.page_size) qs.set("page_size", String(params.page_size));
+    const q = qs.toString();
+    return apiRequest<any>(`/api/v1/venues${q ? `?${q}` : ""}`);
+  },
+  getVenueDirectory: (id: string) => apiRequest<any>(`/api/v1/venues/${id}`),
+  createVenueDirectory: (data: { name: string; address?: string; city?: string; country?: string; image_url?: string; capacity?: number }) =>
+    apiRequest<any>("/api/v1/venues", { method: "POST", body: data }),
+  updateVenueDirectory: (id: string, data: { name?: string; address?: string; city?: string; country?: string; image_url?: string; capacity?: number }) =>
+    apiRequest<any>(`/api/v1/venues/${id}`, { method: "PATCH", body: data }),
+  deleteVenueDirectory: (id: string) => apiRequest<void>(`/api/v1/venues/${id}`, { method: "DELETE" }),
+  bulkCreateVenues: (venues: { name: string; address?: string; city?: string; country?: string; image_url?: string; capacity?: number }[]) =>
+    apiRequest<{ created: number; skipped: number }>("/api/v1/venues/bulk", { method: "POST", body: { venues } }),
+
   // Connectors
   listSellers: () => apiRequest<any[]>("/api/v1/connectors/sellers"),
   connectorStatus: () => apiRequest<any[]>("/api/v1/connectors/status"),

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class EventCreate(BaseModel):
     name: str
     description: str | None = None
+    venue_id: str | None = None
     venue_name: str | None = None
     venue_address: str | None = None
     event_date: datetime | None = None
@@ -19,6 +20,7 @@ class EventCreate(BaseModel):
 class EventUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+    venue_id: str | None = None
     venue_name: str | None = None
     venue_address: str | None = None
     event_date: datetime | None = None
@@ -35,6 +37,7 @@ class EventResponse(BaseModel):
     org_id: str
     name: str
     description: str | None
+    venue_id: str | None = None
     venue_name: str | None
     venue_address: str | None
     event_date: datetime | None

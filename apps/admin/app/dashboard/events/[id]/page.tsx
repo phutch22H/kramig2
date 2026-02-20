@@ -16,6 +16,15 @@ export default function EventDetailPage() {
   const [editForm, setEditForm] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
+  // Venue picker state
+  const [venueSearch, setVenueSearch] = useState("");
+  const [venueResults, setVenueResults] = useState<any[]>([]);
+  const [showVenueDropdown, setShowVenueDropdown] = useState(false);
+  const [searchingVenues, setSearchingVenues] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState<any | null>(null);
+  const venueSearchTimeout = useRef<NodeJS.Timeout | null>(null);
+  const venueDropdownRef = useRef<HTMLDivElement>(null);
+
   // Artist picker state
   const [artistSearch, setArtistSearch] = useState("");
   const [artistResults, setArtistResults] = useState<any[]>([]);
@@ -33,6 +42,9 @@ export default function EventDetailPage() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
       }
+      if (venueDropdownRef.current && !venueDropdownRef.current.contains(e.target as Node)) {
+        setShowVenueDropdown(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -49,6 +61,12 @@ export default function EventDetailPage() {
       ]);
       setEvent(ev);
       setEditForm(ev);
+      if (ev.venue_id) {
+        try {
+          const venue = await api.getVenueDirectory(ev.venue_id);
+          setSelectedVenue(venue);
+        } catch {}
+      }
       setArtists(arts);
       setSellerLinks(links);
       setTicketCounts(counts);
@@ -63,12 +81,57 @@ export default function EventDetailPage() {
     try {
       const updated = await api.updateEvent(eventId, {
         name: editForm.name, description: editForm.description,
+        venue_id: selectedVenue?.id || null,
         venue_name: editForm.venue_name, status: editForm.status,
         is_public: editForm.is_public, capacity: editForm.capacity,
       });
       setEvent(updated);
       setEditing(false);
     } catch {}
+  }
+
+  function handleVenueSearchChange(value: string) {
+    setVenueSearch(value);
+    if (venueSearchTimeout.current) clearTimeout(venueSearchTimeout.current);
+    if (value.trim().length < 2) {
+      setVenueResults([]);
+      setShowVenueDropdown(false);
+      return;
+    }
+    venueSearchTimeout.current = setTimeout(async () => {
+      setSearchingVenues(true);
+      try {
+        const data = await api.listVenueDirectory({ search: value.trim(), page_size: 8 });
+        setVenueResults(data.items || []);
+        setShowVenueDropdown(true);
+      } catch {
+        setVenueResults([]);
+      } finally {
+        setSearchingVenues(false);
+      }
+    }, 300);
+  }
+
+  function selectVenueForEdit(venue: any) {
+    setSelectedVenue(venue);
+    setEditForm((prev: any) => ({
+      ...prev,
+      venue_id: venue.id,
+      venue_name: venue.name,
+      venue_address: venue.address || "",
+    }));
+    setVenueSearch("");
+    setShowVenueDropdown(false);
+  }
+
+  function clearVenueForEdit() {
+    setSelectedVenue(null);
+    setEditForm((prev: any) => ({
+      ...prev,
+      venue_id: null,
+      venue_name: "",
+      venue_address: "",
+    }));
   }
 
   function handleArtistSearchChange(value: string) {
@@ -166,8 +229,59 @@ export default function EventDetailPage() {
           <div style={{ display: "grid", gap: "0.75rem" }}>
             <input style={inputStyle} value={editForm.name || ""} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} placeholder="Name" />
             <textarea style={{ ...inputStyle, minHeight: "60px" }} value={editForm.description || ""} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} placeholder="Description" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
-              <input style={inputStyle} value={editForm.venue_name || ""} onChange={(e) => setEditForm({ ...editForm, venue_name: e.target.value })} placeholder="Venue" />
+            {/* Venue Picker */}
+            <div>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em", color: "#a3a3a3", marginBottom: "4px" }}>Venue</label>
+              {selectedVenue ? (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "8px 12px", background: "#f0f9ff", border: "1px solid #bae6fd",
+                  borderRadius: "4px", fontSize: "13px",
+                }}>
+                  <div>
+                    <span style={{ fontWeight: 500 }}>{selectedVenue.name}</span>
+                    {selectedVenue.city && <span style={{ color: "#2563eb", fontSize: "11px", marginLeft: "8px" }}>{selectedVenue.city}</span>}
+                  </div>
+                  <button type="button" onClick={clearVenueForEdit}
+                    style={{ background: "none", border: "none", color: "#a3a3a3", cursor: "pointer", fontSize: "16px", padding: "0 4px" }}>&times;</button>
+                </div>
+              ) : (
+                <div ref={venueDropdownRef} style={{ position: "relative" }}>
+                  <input
+                    style={inputStyle}
+                    value={venueSearch}
+                    onChange={(e) => handleVenueSearchChange(e.target.value)}
+                    onFocus={() => venueResults.length > 0 && setShowVenueDropdown(true)}
+                    placeholder="Search for a venue..."
+                  />
+                  {showVenueDropdown && (
+                    <div style={{
+                      position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+                      background: "white", border: "1px solid #d4d4d4", borderRadius: "4px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)", maxHeight: "240px", overflowY: "auto",
+                      marginTop: "2px",
+                    }}>
+                      {searchingVenues && <div style={{ padding: "8px 12px", fontSize: "12px", color: "#a3a3a3" }}>Searching...</div>}
+                      {venueResults.map((v) => (
+                        <div key={v.id} onClick={() => selectVenueForEdit(v)}
+                          style={{
+                            padding: "8px 12px", cursor: "pointer", fontSize: "13px",
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                            borderBottom: "1px solid #f5f5f5",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f7")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                        >
+                          <span>{v.name}</span>
+                          {v.city && <span style={{ fontSize: "11px", color: "#2563eb", background: "#dbeafe", padding: "1px 6px", borderRadius: "3px" }}>{v.city}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
               <select style={inputStyle} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
                 <option value="draft">Draft</option><option value="published">Published</option><option value="completed">Completed</option>
               </select>

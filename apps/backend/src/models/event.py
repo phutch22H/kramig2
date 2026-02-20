@@ -17,6 +17,9 @@ class Event(Base):
     )
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    venue_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("venues.id", ondelete="SET NULL"), nullable=True
+    )
     venue_name: Mapped[str | None] = mapped_column(String(500), nullable=True)
     venue_address: Mapped[str | None] = mapped_column(String(500), nullable=True)
     event_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -34,6 +37,7 @@ class Event(Base):
     )
 
     organization: Mapped["Organization"] = relationship(back_populates="events")
+    venue: Mapped["Venue | None"] = relationship()
     artists: Mapped[list["EventArtist"]] = relationship(back_populates="event")
     seller_links: Mapped[list["EventSellerLink"]] = relationship(back_populates="event")
 
@@ -59,3 +63,4 @@ class EventArtist(Base):
 from src.models.artist import Artist  # noqa: E402
 from src.models.organization import Organization  # noqa: E402
 from src.models.ticket import EventSellerLink  # noqa: E402
+from src.models.venue import Venue  # noqa: E402
