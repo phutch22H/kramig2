@@ -48,6 +48,12 @@ class TicketSellerResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class TicketSellerCreate(BaseModel):
+    name: str
+    slug: str
+    website_url: str | None = None
+
+
 class ConnectorConnectRequest(BaseModel):
     api_key: str
     api_secret: str | None = None

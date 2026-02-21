@@ -11,6 +11,7 @@ from src.models.ticket import SellerConnection, TicketSeller
 from src.schemas.ticket import (
     ConnectorConnectRequest,
     ConnectorStatusResponse,
+    TicketSellerCreate,
     TicketSellerResponse,
 )
 from src.services.encryption import encrypt_credentials, decrypt_credentials
@@ -29,6 +30,21 @@ async def list_sellers(db: AsyncSession = Depends(get_db)):
         )
         for s in result.scalars().all()
     ]
+
+
+@router.post("/sellers", response_model=TicketSellerResponse, status_code=201)
+async def create_seller(
+    body: TicketSellerCreate,
+    ctx: TenantContext = Depends(require_role("owner", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    seller = TicketSeller(name=body.name, slug=body.slug, website_url=body.website_url)
+    db.add(seller)
+    await db.flush()
+    return TicketSellerResponse(
+        id=str(seller.id), name=seller.name, slug=seller.slug,
+        website_url=seller.website_url, is_active=seller.is_active,
+    )
 
 
 @router.post("/connect/{seller_id}", response_model=ConnectorStatusResponse)

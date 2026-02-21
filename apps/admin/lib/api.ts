@@ -191,6 +191,8 @@ export const api = {
     apiRequest<{ created: number; skipped: number }>("/api/v1/venues/bulk", { method: "POST", body: { venues } }),
 
   // Connectors
+  createSeller: (data: { name: string; slug: string; website_url?: string }) =>
+    apiRequest<any>("/api/v1/connectors/sellers", { method: "POST", body: data }),
   listSellers: () => apiRequest<any[]>("/api/v1/connectors/sellers"),
   connectorStatus: () => apiRequest<any[]>("/api/v1/connectors/status"),
   connectSeller: (sellerId: string, data: { api_key: string; api_secret?: string; extra?: Record<string, string> }) =>
