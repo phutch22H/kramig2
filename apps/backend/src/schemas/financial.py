@@ -35,7 +35,9 @@ class FinancialReportResponse(BaseModel):
     id: str
     org_id: str
     event_id: str
+    event_name: str | None = None
     seller_id: str
+    seller_name: str | None = None
     report_date: datetime
     tickets_sold: int
     gross_revenue: float

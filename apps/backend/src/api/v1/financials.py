@@ -9,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import get_db
 from src.middleware.tenant import TenantContext, get_tenant_context, require_role
+from src.models.event import Event
 from src.models.financial import FinancialReport
+from src.models.ticket import TicketSeller
 from src.schemas.financial import (
     FinancialReportCreate,
     FinancialReportResponse,
@@ -26,21 +28,27 @@ async def financial_summary(
     db: AsyncSession = Depends(get_db),
     event_id: str | None = Query(None),
 ):
-    query = select(FinancialReport).where(FinancialReport.org_id == ctx.org_id)
+    query = (
+        select(FinancialReport, Event.name, TicketSeller.name)
+        .outerjoin(Event, FinancialReport.event_id == Event.id)
+        .outerjoin(TicketSeller, FinancialReport.seller_id == TicketSeller.id)
+        .where(FinancialReport.org_id == ctx.org_id)
+    )
     if event_id:
         query = query.where(FinancialReport.event_id == uuid.UUID(event_id))
     query = query.order_by(FinancialReport.report_date.desc())
 
     result = await db.execute(query)
-    reports = result.scalars().all()
+    rows = result.all()
 
+    reports_list = [r for r, _, _ in rows]
     return FinancialSummary(
-        total_gross_revenue=sum(r.gross_revenue for r in reports),
-        total_net_revenue=sum(r.net_revenue for r in reports),
-        total_fees=sum(r.fees for r in reports),
-        total_refunds=sum(r.refunds for r in reports),
-        total_tickets_sold=sum(r.tickets_sold for r in reports),
-        reports=[_report_response(r) for r in reports],
+        total_gross_revenue=sum(r.gross_revenue for r in reports_list),
+        total_net_revenue=sum(r.net_revenue for r in reports_list),
+        total_fees=sum(r.fees for r in reports_list),
+        total_refunds=sum(r.refunds for r in reports_list),
+        total_tickets_sold=sum(r.tickets_sold for r in reports_list),
+        reports=[_report_response(r, event_name=en, seller_name=sn) for r, en, sn in rows],
     )
 
 
@@ -110,22 +118,28 @@ async def export_financials(
     db: AsyncSession = Depends(get_db),
     event_id: str | None = Query(None),
 ):
-    query = select(FinancialReport).where(FinancialReport.org_id == ctx.org_id)
+    query = (
+        select(FinancialReport, Event.name, TicketSeller.name)
+        .outerjoin(Event, FinancialReport.event_id == Event.id)
+        .outerjoin(TicketSeller, FinancialReport.seller_id == TicketSeller.id)
+        .where(FinancialReport.org_id == ctx.org_id)
+    )
     if event_id:
         query = query.where(FinancialReport.event_id == uuid.UUID(event_id))
 
     result = await db.execute(query.order_by(FinancialReport.report_date.desc()))
-    reports = result.scalars().all()
+    rows = result.all()
 
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "event_id", "seller_id", "report_date", "tickets_sold",
+        "event_id", "event_name", "seller_id", "seller_name", "report_date", "tickets_sold",
         "gross_revenue", "net_revenue", "fees", "refunds", "settlement_status", "currency",
     ])
-    for r in reports:
+    for r, event_name, seller_name in rows:
         writer.writerow([
-            str(r.event_id), str(r.seller_id), r.report_date.isoformat(),
+            str(r.event_id), event_name or "", str(r.seller_id), seller_name or "",
+            r.report_date.isoformat(),
             r.tickets_sold, r.gross_revenue, r.net_revenue, r.fees, r.refunds,
             r.settlement_status, r.currency,
         ])
@@ -150,10 +164,15 @@ async def _get_org_report(db: AsyncSession, org_id: uuid.UUID, report_id: str) -
     return report
 
 
-def _report_response(r: FinancialReport) -> FinancialReportResponse:
+def _report_response(
+    r: FinancialReport,
+    event_name: str | None = None,
+    seller_name: str | None = None,
+) -> FinancialReportResponse:
     return FinancialReportResponse(
         id=str(r.id), org_id=str(r.org_id), event_id=str(r.event_id),
-        seller_id=str(r.seller_id), report_date=r.report_date,
+        event_name=event_name, seller_id=str(r.seller_id),
+        seller_name=seller_name, report_date=r.report_date,
         tickets_sold=r.tickets_sold, gross_revenue=r.gross_revenue,
         net_revenue=r.net_revenue, fees=r.fees, refunds=r.refunds,
         refund_count=r.refund_count, settlement_status=r.settlement_status,
